@@ -1,0 +1,2 @@
+#!/bin/sh
+node ia/verificar-seguridad.cjs && npm run check

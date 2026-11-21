@@ -13,3 +13,5 @@ coverage/
 *.aab
 google-services.json
 GoogleService-Info.plist
+
+.expo/

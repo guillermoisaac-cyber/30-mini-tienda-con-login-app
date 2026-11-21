@@ -3,7 +3,30 @@ const base=process.env.EXPO_PUBLIC_API_URL||'';
 let onExpired:()=>void=()=>{};
 export function registerSessionExpired(callback:()=>void){onExpired=callback}
 export class ApiError extends Error{constructor(public status:number,message:string){super(message)}}
-async function raw(path:string,init:RequestInit={},token?:string){if(!base.startsWith('https://'))throw new Error('Configura EXPO_PUBLIC_API_URL con HTTPS');return fetch(`${base}${path}`,{...init,headers:{...(init.body?{'Content-Type':'application/json'}:{}),...(token?{Authorization:`Bearer ${token}`}:{}) ,...init.headers}})}
+async function raw(
+  path: string,
+  init: RequestInit = {},
+  token?: string
+) {
+  const isHttps = base.startsWith('https://');
+
+  const isLocalDev =
+    __DEV__ &&
+    base === 'http://192.168.1.194:3000';
+
+  if (!isHttps && !isLocalDev) {
+    throw new Error('Configura EXPO_PUBLIC_API_URL con HTTPS');
+  }
+
+  return fetch(`${base}${path}`, {
+    ...init,
+    headers: {
+      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...init.headers,
+    },
+  });
+}
 async function parse<T>(r:Response):Promise<T>{const data=await r.json().catch(()=>({error:'Respuesta inválida'}));if(!r.ok)throw new ApiError(r.status,data.error||'Error de conexión');return data as T}
 export async function publicPost<T>(path:string,payload:unknown){return parse<T>(await raw(path,{method:'POST',body:JSON.stringify(payload)}))}
 let refreshing:Promise<string>|null=null;
